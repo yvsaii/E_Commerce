@@ -1,0 +1,12 @@
+/* Force visibility for product cards */
+.products-grid {
+  display: grid !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.product-card {
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+

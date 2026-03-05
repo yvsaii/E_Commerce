@@ -1,0 +1,599 @@
+================================================================================
+                     NOVACART E-COMMERCE APPLICATION
+                     TECHNICAL DOCUMENTATION
+================================================================================
+
+================================================================================
+                           PROJECT OVERVIEW
+================================================================================
+
+Project Name: NovaCart
+Type: React E-Commerce Web Application
+Framework: React 18 + Vite
+Routing: React Router DOM v6
+State Management: React Context API
+Styling: CSS Modules / CSS Files
+Data Storage: LocalStorage (for demo purposes)
+
+External APIs Used:
+- FakeStoreAPI (https://fakestoreapi.com) - For fetching product data
+- Unsplash (https://unsplash.com) - For banner and placeholder images
+
+================================================================================
+                           FILE STRUCTURE
+================================================================================
+
+e-commerce/
+├── public/                     # Static assets
+├── src/
+│   ├── main.jsx               # Entry point
+│   ├── App.jsx                # Main app component with routing
+│   ├── index.css              # Global styles
+│   ├── App.css                # App-level styles
+│   │
+│   ├── Components/            # React Components
+│   │   ├── Header.jsx         # Navigation header
+│   │   ├── Header.css         # Header styles
+│   │   ├── Home.jsx           # Home page with banner, about, featured products
+│   │   ├── Home.css           # Home page styles
+│   │   ├── ProductList.jsx    # Products listing page (all products)
+│   │   ├── ProductList.css    # Product list styles
+│   │   ├── ProductDetails.jsx  # Individual product details page
+│   │   ├── ProductDetails.css  # Product details styles
+│   │   ├── Cart.jsx           # Shopping cart page
+│   │   ├── Cart.css           # Cart styles
+│   │   ├── LoginModal.jsx     # Login/Register modal component
+│   │   ├── LoginModal.css     # Login modal styles
+│   │   ├── Footer.jsx         # Footer component
+│   │   └── Footer.css         # Footer styles
+│   │
+│   └── Context/               # React Context for state management
+│       ├── AuthContext.jsx    # Authentication state & methods
+│       └── CartContext.jsx    # Shopping cart state & methods
+│
+├── index.html                 # HTML entry point
+├── package.json               # Dependencies
+├── vite.config.js             # Vite configuration
+└── eslint.config.js           # ESLint configuration
+
+================================================================================
+                           COMPONENT DETAILS
+================================================================================
+
+------------------------------------------------------------------------------
+1. MAIN.JSX - Application Entry Point
+------------------------------------------------------------------------------
+File: src/main.jsx
+
+Purpose:
+- Initializes the React application
+- Wraps the app with necessary providers
+
+Key Features:
+- React.StrictMode for development checking
+- BrowserRouter for client-side routing
+- AuthProvider: Provides authentication state globally
+- CartProvider: Provides shopping cart state globally
+- Loads global CSS files (index.css)
+
+Technical Details:
+- Uses createRoot from react-dom/client
+- All context providers are nested (AuthProvider → CartProvider → App)
+- This nesting order ensures Cart can access Auth context if needed
+
+------------------------------------------------------------------------------
+2. APP.JSX - Main Router Configuration
+------------------------------------------------------------------------------
+File: src/app.jsx
+
+Purpose:
+- Defines application routes using React Router v6
+
+Routes:
+┌─────────────────┬─────────────────────────────────────┐
+│ Path            │ Component                           │
+├─────────────────┼─────────────────────────────────────┤
+│ /               │ Home                                │
+│ /products       │ ProductList                         │
+│ /product/:id    │ ProductDetails                      │
+│ /cart           │ Cart                                │
+└─────────────────┴─────────────────────────────────────┘
+
+Technical Details:
+- Uses <Routes> and <Route> components from react-router-dom
+- No layout wrapper - each page includes Header and Footer
+- Dynamic route /product/:id uses URL parameter for product ID
+
+------------------------------------------------------------------------------
+3. HEADER.JSX - Navigation Header
+------------------------------------------------------------------------------
+File: src/Components/Header.jsx
+
+Purpose:
+- Main navigation bar for the application
+- Responsive design with hamburger menu for mobile
+
+Features:
+- Logo (NovaCart) on the left - links to home
+- Desktop navigation: Home, Products, Contact links
+- Right side: User section (if logged in), Cart icon, Hamburger menu
+
+Responsive Behavior:
+- Desktop (>768px): Shows full navigation
+- Mobile (≤768px): Hides nav links, shows hamburger icon
+
+State Management:
+- isMenuOpen (useState): Controls mobile menu visibility
+
+Technical Details:
+- Uses useRef for click-outside detection
+- useEffect adds mousedown listener to close menu when clicking outside
+- Cart icon shows badge with cart count from CartContext
+- User section shows email/name when logged in
+
+Key Functions:
+- toggleMenu(): Opens/closes mobile menu
+- closeMenu(): Closes mobile menu
+- handleLogout(): Logs out user and closes menu
+
+Styles: src/Components/Header.css
+
+------------------------------------------------------------------------------
+4. HOME.JSX - Landing Page
+------------------------------------------------------------------------------
+File: src/Components/Home.jsx
+
+Purpose:
+- Landing page with hero banner, about section, featured products, reviews
+
+Sections:
+1. Hero Banner Slider
+   - Auto-slides every 3.5 seconds
+   - Manual navigation with arrows and dots
+   - 4 banner images from Unsplash
+   - "Shop Now" button links to /products
+
+2. About Section (Why Choose NovaCart)
+   - 3 cards: Fast Delivery, Secure Payments, Quality Products
+   - Static data with emoji icons
+
+3. Featured Products Section
+   - 6 featured products (static data)
+   - Scroll animation using Intersection Observer
+   - "View Details" links to product page
+
+4. Customer Reviews Section
+   - Auto-slides every 5 seconds
+   - Shows customer photo, name, rating, review text
+   - Manual navigation with arrows
+
+State Management:
+- currentSlide (useState): Hero banner current slide
+- currentReview (useState): Reviews carousel current review
+
+Technical Details:
+- Uses useRef for product card animations
+- useEffect for auto-sliding intervals
+- IntersectionObserver for scroll animations
+
+Styles: src/Components/Home.css
+
+------------------------------------------------------------------------------
+5. PRODUCTLIST.JSX - Products Page
+------------------------------------------------------------------------------
+File: src/Components/ProductList.jsx
+
+Purpose:
+- Displays all products fetched from FakeStoreAPI
+- Includes search functionality
+
+Features:
+- Fetches products from: https://fakestoreapi.com/products
+- Search bar to filter products by title
+- Product cards in responsive grid layout
+- Each card shows: image, title, price, "Add to Cart" button
+- Loading state while fetching
+- "No products found" message when search has no results
+
+API Integration:
+- GET https://fakestoreapi.com/products
+- Returns array of 20 products
+- Each product has: id, title, price, description, category, image, rating
+
+State Management:
+- products (useState): All fetched products
+- searchTerm (useState): Current search input
+- loading (useState): Loading state
+
+Computed Values:
+- filteredProducts: Products filtered by searchTerm
+
+User Interactions:
+- Search: Filters products in real-time
+- Add to Cart: If not logged in, shows LoginModal
+- Product Click: Navigates to ProductDetails page
+
+Styles: src/Components/ProductList.css
+
+------------------------------------------------------------------------------
+6. PRODUCTDETAILS.JSX - Product Detail Page
+------------------------------------------------------------------------------
+File: src/Components/ProductDetails.jsx
+
+Purpose:
+- Shows detailed information about a single product
+- Allows user to select size and add to cart
+
+Features:
+- Fetches single product from: https://fakestoreapi.com/products/{id}
+- Displays product image, title, price, description
+- Size selector (S, M, L, XL, XXL)
+- Size is required before adding to cart
+- "Back" button to return to products
+- "Add to Cart" button with login check
+
+API Integration:
+- GET https://fakestoreapi.com/products/{id}
+- Returns single product object
+- Uses useParams to get product ID from URL
+
+State Management:
+- product (useState): Fetched product data
+- selectedSize (useState): User's size selection
+- loading (useState): Loading state
+- showLoginModal (useState): Login modal visibility
+- pendingProduct (useState): Product waiting to be added after login
+
+User Interactions:
+- Select Size: Click to select size option
+- Add to Cart: Validates size, checks login, adds to cart
+- Back Button: Navigates back to products
+
+Styles: src/Components/ProductDetails.css
+
+------------------------------------------------------------------------------
+7. CART.JSX - Shopping Cart Page
+------------------------------------------------------------------------------
+File: src/Components/Cart.jsx
+
+Purpose:
+- Displays items in shopping cart
+- Allows quantity updates, item removal
+- Shows order summary with totals
+
+Features:
+- Empty cart message with "Continue Shopping" link
+- List of cart items with:
+  - Product image
+  - Title and price
+  - Quantity controls (+/- buttons)
+  - Line total (price × quantity)
+  - Remove button (×)
+- Order Summary:
+  - Subtotal
+  - Tax (8%)
+  - Total with tax
+  - "Proceed to Checkout" button (UI only)
+  - "Continue Shopping" link
+
+State Management:
+- Uses useCart hook to access:
+  - cartItems: Array of items in cart
+  - updateQuantity(productId, quantity): Update item quantity
+  - removeFromCart(productId): Remove item
+  - getCartTotal(): Calculate subtotal
+  - getCartTax(): Calculate 8% tax
+  - getCartTotalWithTax(): Calculate total with tax
+  - clearCart(): Empty the cart
+
+Technical Details:
+- If cart is empty, shows empty cart message
+- Uses CartContext for all cart operations
+- Prices displayed with 2 decimal places
+
+Styles: src/Components/Cart.css
+
+------------------------------------------------------------------------------
+8. LOGINMODAL.JX - Authentication Modal
+------------------------------------------------------------------------------
+File: src/Components/LoginModal.jsx
+
+Purpose:
+- Reusable modal for login and registration
+- Used throughout the app when authentication is required
+
+Features:
+- Toggle between Login and Register modes
+- Form validation:
+  - Name required (register mode)
+  - Email validation (regex)
+  - Password minimum 6 characters
+  - Confirm password matching (register mode)
+- Error messages for validation failures
+- API error messages from backend
+- Success message on registration
+- Loading state during submission
+
+Form Fields:
+- Name (register only)
+- Email
+- Password
+- Confirm Password (register only)
+
+State Management:
+- formData (useState): All form field values
+- errors (useState): Validation error messages
+- apiError (useState): Server error messages
+- isLoading (useState): Submission loading state
+- successMessage (useState): Success feedback
+- isRegisterMode (useState): Toggle between login/register
+
+User Interactions:
+- Switch between Login/Register
+- Submit triggers validation
+- Success closes modal and triggers callback
+- Close button clears form and closes modal
+
+Technical Details:
+- Uses useAuth hook for login/register functions
+- Validates against localStorage stored users
+- Callback onLoginSuccess receives pendingProduct if any
+- Modal closes on overlay click or close button
+
+Styles: src/Components/LoginModal.css
+
+------------------------------------------------------------------------------
+9. FOOTER.JX - Footer Component
+------------------------------------------------------------------------------
+File: src/Components/Footer.jsx
+
+Purpose:
+- Site footer with company info and links
+
+Sections:
+1. Company Info
+   - Company name: NovaCart
+   - Description text
+
+2. Quick Links
+   - Home, Products, Categories, Contact
+
+3. Customer Service
+   - Shipping Info, Returns, FAQ, Support
+
+4. Contact Info
+   - Email, Phone, Address
+
+Features:
+- Copyright year automatically updates
+- All links are placeholder (href="#")
+
+Styles: src/Components/Footer.css
+
+================================================================================
+                         CONTEXT API DETAILS
+================================================================================
+
+------------------------------------------------------------------------------
+1. AUTHCONTEXT.JSX - Authentication State Management
+------------------------------------------------------------------------------
+File: src/Context/AuthContext.jsx
+
+Purpose:
+- Manages user authentication state across the application
+- Uses localStorage for session persistence
+
+State Values:
+- user: { email, name } or null
+- isLoggedIn: boolean
+- isLoading: boolean (for initial auth check)
+
+Methods Provided:
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Method          │ Description                                               │
+├─────────────────┼───────────────────────────────────────────────────────────┤
+│ login()         │ Validates credentials against localStorage users          │
+│                 │ Returns { success: boolean, message?: string }           │
+├─────────────────┼───────────────────────────────────────────────────────────┤
+│ register()      │ Creates new user in localStorage                         │
+│                 │ Auto-logs in after registration                          │
+│                 │ Returns { success: boolean, message?: string }           │
+├─────────────────┼───────────────────────────────────────────────────────────┤
+│ logout()        │ Clears user session from state and localStorage          │
+└─────────────────┴───────────────────────────────────────────────────────────┘
+
+LocalStorage Keys:
+- novacart_users: Array of registered users [{name, email, password}]
+- novacart_user: Current logged-in user {email, name}
+- novacart_isLoggedIn: "true" if logged in
+
+Technical Details:
+- Creates AuthContext using createContext()
+- Provides useAuth() custom hook for easy access
+- Throws error if useAuth used outside AuthProvider
+- useEffect checks for existing session on mount
+
+------------------------------------------------------------------------------
+2. CARTCONTEXT.JSX - Shopping Cart State Management
+------------------------------------------------------------------------------
+File: src/Context/CartContext.jsx
+
+Purpose:
+- Manages shopping cart state across the application
+- Uses localStorage for cart persistence
+
+State Values:
+- cartItems: Array of cart items [{id, title, price, image, quantity, ...}]
+- cartCount: Total number of items in cart
+- pendingProduct: Product waiting to be added after login
+
+Methods Provided:
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Method                  │ Description                                       │
+├─────────────────────────┼───────────────────────────────────────────────────┤
+│ addToCart(product)      │ Adds product to cart or increments quantity      │
+├─────────────────────────┼───────────────────────────────────────────────────┤
+│ removeFromCart(id)     │ Removes item from cart                           │
+├─────────────────────────┼───────────────────────────────────────────────────┤
+│ updateQuantity(id, qty)│ Updates item quantity (removes if qty ≤ 0)       │
+├─────────────────────────┼───────────────────────────────────────────────────┤
+│ clearCart()             │ Empties the cart                                 │
+├─────────────────────────┼───────────────────────────────────────────────────┤
+│ getCartTotal()          │ Returns subtotal (sum of price × quantity)       │
+├─────────────────────────┼───────────────────────────────────────────────────┤
+│ getCartTax()            │ Returns 8% tax on subtotal                        │
+├─────────────────────────┼───────────────────────────────────────────────────┤
+│ getCartTotalWithTax()   │ Returns total including tax                      │
+├─────────────────────────┼───────────────────────────────────────────────────┤
+│ savePendingProduct()    │ Saves product for addition after login           │
+├─────────────────────────┼───────────────────────────────────────────────────┤
+│ processPendingProduct() │ Adds saved product to cart                       │
+├─────────────────────────┼───────────────────────────────────────────────────┤
+│ clearPendingProduct()   │ Clears pending product                           │
+└─────────────────────────┴───────────────────────────────────────────────────┘
+
+LocalStorage Key:
+- novacart_cart: JSON stringified array of cart items
+
+Technical Details:
+- Creates CartContext using createContext()
+- Provides useCart() custom hook for easy access
+- useEffect loads cart from localStorage on mount
+- useEffect saves cart to localStorage on any change
+- useEffect updates cartCount when cartItems change
+- Throws error if useCart used outside CartProvider
+
+Cart Item Structure:
+{
+  id: number,
+  title: string,
+  price: number,
+  image: string,
+  quantity: number,
+  selectedSize?: string  // For product details
+}
+
+================================================================================
+                         API INTEGRATION
+================================================================================
+
+All product data is fetched from FakeStoreAPI (https://fakestoreapi.com)
+
+------------------------------------------------------------------------------
+FAKESTOREAPI ENDPOINTS
+------------------------------------------------------------------------------
+
+1. Get All Products
+   URL: GET https://fakestoreapi.com/products
+   Response: Array of 20 products
+   
+   Product Schema:
+   {
+     id: number,
+     title: string,
+     price: number,
+     description: string,
+     category: string,
+     image: string,           // URL to product image
+     rating: {
+       rate: number,          // 0-5 rating
+       count: number          // number of reviews
+     }
+   }
+
+2. Get Single Product
+   URL: GET https://fakestoreapi.com/products/{id}
+   Response: Single product object
+   
+   Example: https://fakestoreapi.com/products/1
+
+3. Get Product Categories
+   URL: GET https://fakestoreapi.com/products/categories
+   Response: Array of category strings
+   
+   Categories: ["electronics", "jewelery", "men's clothing", "women's clothing"]
+
+Technical Details:
+- No API key required
+- CORS enabled for all origins
+- Used fetch() API with async/await
+- Error handling with try/catch
+- Loading states while fetching
+
+================================================================================
+                         STYLING APPROACH
+================================================================================
+
+CSS Organization:
+- Each component has its own .jsx and .css file
+- CSS files are imported in respective components
+- Global styles in index.css
+
+Responsive Design:
+- Mobile-first approach where applicable
+- Breakpoints:
+  - 768px: Mobile to tablet transition
+  - 480px: Small mobile devices
+
+Key CSS Techniques:
+- CSS Grid for product listings
+- Flexbox for layout
+- CSS Variables for theming
+- Animations with @keyframes
+- Transitions for hover effects
+
+Color Scheme:
+- Primary: #646cff (Purple/Blue)
+- Background: #ffffff (White)
+- Text: #333333 (Dark Gray)
+- Accent: #ff4757 (Red for alerts/badges)
+- Dark: #000000 (Header/Footer background)
+
+================================================================================
+                         STATE MANAGEMENT SUMMARY
+================================================================================
+
+┌─────────────────┬────────────────────────────────────────────────────────────┐
+│ Component       │ State Management                                            │
+├─────────────────┼────────────────────────────────────────────────────────────┤
+│ App.jsx         │ React Router (no local state)                              │
+│ Header.jsx      │ isMenuOpen (useState), useAuth, useCart                   │
+│ Home.jsx        │ currentSlide, currentReview (useState), refs               │
+│ ProductList.jsx │ products, searchTerm, loading (useState)                    │
+│ ProductDetails  │ product, selectedSize, loading, showLoginModal            │
+│ Cart.jsx        │ useCart hook (all cart state from context)                │
+│ LoginModal.jsx  │ formData, errors, apiError, isLoading, isRegisterMode      │
+└─────────────────┴────────────────────────────────────────────────────────────┘
+
+================================================================================
+                         LOCALSTORAGE USAGE
+================================================================================
+
+┌─────────────────────────────┬───────────────────────────────────────────────┐
+│ Key                        │ Data Stored                                    │
+├─────────────────────────────┼───────────────────────────────────────────────┤
+│ novacart_users             │ Array of registered users [{name, email,       │
+│                             │ password}]                                     │
+├─────────────────────────────┼───────────────────────────────────────────────┤
+│ novacart_user              │ Current user object {email, name}             │
+├─────────────────────────────┼───────────────────────────────────────────────┤
+│ novacart_isLoggedIn        │ "true" or "false" string                       │
+├─────────────────────────────┼───────────────────────────────────────────────┤
+│ novacart_cart              │ JSON array of cart items                       │
+└─────────────────────────────┴───────────────────────────────────────────────┘
+
+================================================================================
+                         DEVELOPMENT NOTES
+================================================================================
+
+1. The application uses Vite for development server and building
+2. React Router v6 handles client-side routing
+3. No backend server - all data is mock (FakeStoreAPI) or localStorage
+4. Authentication is simulated using localStorage
+5. Cart data persists across page refreshes
+6. The app is fully responsive for desktop, tablet, and mobile
+
+================================================================================
+                              END OF DOCUMENTATION
+================================================================================
+
