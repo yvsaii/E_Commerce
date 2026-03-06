@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Header from './Header';
 import Footer from './Footer';
@@ -7,6 +7,32 @@ import './Cart.css';
 
 const Cart = () => {
   const { cartItems, updateQuantity, removeFromCart, getCartTotal, getCartTax, getCartTotalWithTax, clearCart } = useCart();
+  const [checkoutSuccess, setCheckoutSuccess] = useState(false);
+
+  const handleCheckout = () => {
+    // Show success message
+    setCheckoutSuccess(true);
+    // Clear the cart after successful checkout
+    clearCart();
+  };
+
+  if (checkoutSuccess) {
+    return (
+      <div>
+        <Header />
+        <div className="checkout-success">
+          <div className="success-icon">✓</div>
+          <h2>Successfully Booked!</h2>
+          <p>Your order has been placed successfully.</p>
+          <p className="success-message">Thank you for shopping with NovaCart!</p>
+          <Link to="/products" className="continue-shopping-btn">
+            Continue Shopping
+          </Link>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   if (cartItems.length === 0) {
     return (
@@ -92,7 +118,7 @@ const Cart = () => {
               <span>${getCartTotalWithTax().toFixed(2)}</span>
             </div>
             
-            <button className="checkout-btn">
+            <button className="checkout-btn" onClick={handleCheckout}>
               Proceed to Checkout
             </button>
             
